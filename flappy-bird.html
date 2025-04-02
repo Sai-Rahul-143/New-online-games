@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+    <title>Flappy Bird Clone</title>
+    <style>
+        canvas { background: lightblue; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="320" height="480"></canvas>
+    <script>
+        let canvas = document.getElementById("gameCanvas");
+        let ctx = canvas.getContext("2d");
+        let birdY = 150, gravity = 1, velocity = 0;
+        let pipes = [{ x: 300, height: Math.random() * 200 + 50 }];
+        document.addEventListener("keydown", () => velocity = -10);
+        
+        function update() {
+            velocity += gravity;
+            birdY += velocity;
+            if (birdY > canvas.height) birdY = 150;
+            pipes.forEach(p => p.x -= 2);
+            if (pipes[0].x < -50) pipes.shift(), pipes.push({ x: 300, height: Math.random() * 200 + 50 });
+            draw();
+            requestAnimationFrame(update);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "yellow"; ctx.fillRect(50, birdY, 20, 20);
+            ctx.fillStyle = "green";
+            pipes.forEach(p => { ctx.fillRect(p.x, 0, 50, p.height); ctx.fillRect(p.x, p.height + 100, 50, canvas.height); });
+        }
+        
+        update();
+    </script>
+
+</body></html>
