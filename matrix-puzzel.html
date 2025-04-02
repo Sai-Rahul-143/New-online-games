@@ -1,51 +1,103 @@
-<!doctype html>
-<html>
+<!doctype html><html>
 <head>
-    <title>Matrix Puzzle</title>
+    <title>Matrix Puzzle Game</title>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; }
-        .grid { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; margin: 20px auto; width: 310px; }
-        .tile { width: 100px; height: 100px; font-size: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid black; cursor: pointer; }
+        .grid { display: grid; gap: 5px; margin: 20px auto; }
+        .tile { width: 50px; height: 50px; font-size: 18px; display: flex; align-items: center; justify-content: center; border: 2px solid black; cursor: pointer; background: #eee; }
         .empty { background-color: lightgray; }
+        .controls { margin: 10px; }
+        #timer { font-size: 18px; }
     </style>
 </head>
 <body>
-    <h1>Matrix Puzzle</h1>
-    <p>Tap tiles to arrange them in order!</p>
-    <div class="grid" id="grid"></div>
-    <button onclick="shuffle()">Shuffle</button>
+    <h1>Matrix Puzzle Game</h1>
+    <div class="controls">
+        <label for="size">Select Grid Size:</label>
+        <select id="size" onchange="initializeGame()">
+            <option value="3">3x3</option>
+            <option value="4">4x4</option>
+            <option value="5">5x5</option>
+            <option value="6">6x6</option>
+            <option value="7">7x7</option>
+            <option value="8">8x8</option>
+            <option value="9">9x9</option>
+            <option value="10">10x10</option>
+        </select>
+        <button onclick="shuffle()">Shuffle</button>
+        <p id="timer">Time: 0s</p>
+    </div>
+    <div id="grid" class="grid"></div>
+    <h2>Leaderboard</h2>
+    <ul id="leaderboard"></ul><script>
+    let tiles = [];
+    let gridSize = 3;
+    let timer = 0;
+    let interval;
+    let leaderboard = [];
 
-    <script>
-        let tiles = [...Array(8).keys()].map(x => x + 1).concat(null);
-        let grid = document.getElementById("grid");
-
-        function drawGrid() {
-            grid.innerHTML = "";
-            tiles.forEach((num, index) => {
-                let div = document.createElement("div");
-                div.className = "tile" + (num ? "" : " empty");
-                div.innerText = num || "";
-                div.onclick = () => moveTile(index);
-                grid.appendChild(div);
-            });
-        }
-
-        function moveTile(index) {
-            let emptyIndex = tiles.indexOf(null);
-            let validMoves = [emptyIndex - 3, emptyIndex + 3, emptyIndex - 1, emptyIndex + 1];
-            if (validMoves.includes(index)) {
-                [tiles[emptyIndex], tiles[index]] = [tiles[index], tiles[emptyIndex]];
-                drawGrid();
-            }
-        }
-
-        function shuffle() {
-            for (let i = 0; i < 100; i++) {
-                moveTile(Math.floor(Math.random() * 9));
-            }
-        }
-
+    function initializeGame() {
+        clearInterval(interval);
+        timer = 0;
+        document.getElementById("timer").innerText = "Time: 0s";
+        gridSize = parseInt(document.getElementById("size").value);
+        tiles = [...Array(gridSize * gridSize - 1).keys()].map(x => x + 1).concat(null);
         drawGrid();
-    </script>
+    }
+
+    function drawGrid() {
+        let grid = document.getElementById("grid");
+        grid.innerHTML = "";
+        grid.style.gridTemplateColumns = `repeat(${gridSize}, 50px)`;
+        grid.style.gridTemplateRows = `repeat(${gridSize}, 50px)`;
+        
+        tiles.forEach((num, index) => {
+            let div = document.createElement("div");
+            div.className = "tile" + (num ? "" : " empty");
+            div.innerText = num || "";
+            div.onclick = () => moveTile(index);
+            grid.appendChild(div);
+        });
+    }
+
+    function moveTile(index) {
+        let emptyIndex = tiles.indexOf(null);
+        let validMoves = [emptyIndex - gridSize, emptyIndex + gridSize, emptyIndex - 1, emptyIndex + 1];
+        if (validMoves.includes(index)) {
+            [tiles[emptyIndex], tiles[index]] = [tiles[index], tiles[emptyIndex]];
+            drawGrid();
+            if (isSolved()) {
+                clearInterval(interval);
+                let name = prompt("You won! Enter your name for the leaderboard:");
+                if (name) leaderboard.push({ name, time: timer });
+                updateLeaderboard();
+            }
+        }
+    }
+
+    function shuffle() {
+        clearInterval(interval);
+        timer = 0;
+        document.getElementById("timer").innerText = "Time: 0s";
+        interval = setInterval(() => { timer++; document.getElementById("timer").innerText = `Time: ${timer}s`; }, 1000);
+        for (let i = 0; i < 1000; i++) {
+            moveTile(Math.floor(Math.random() * (gridSize * gridSize)));
+        }
+    }
+
+    function isSolved() {
+        let solved = [...Array(gridSize * gridSize - 1).keys()].map(x => x + 1).concat(null);
+        return JSON.stringify(tiles) === JSON.stringify(solved);
+    }
+
+    function updateLeaderboard() {
+        leaderboard.sort((a, b) => a.time - b.time);
+        let board = document.getElementById("leaderboard");
+        board.innerHTML = leaderboard.map(entry => `<li>${entry.name} - ${entry.time}s</li>`).join("\n");
+    }
+
+    initializeGame();
+</script>
+
 
 </body></html>
